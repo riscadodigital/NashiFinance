@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nashi Finance] | BSC Balance Checker</title>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="styles/style_bnb.css">
+</head>
+<body>
+    <header class="cabecalho">
+    <h1> <a href="index.html"><img class="logotipo" src="images/nashifinance.png"></a></h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Início</a></li>
+            <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Ferramentas</a>    
+                <div class="dropdown-content">
+                    <a href="conversor_cripto.html">Conversor de Criptomoedas</a>
+                    <a href="satoshis.html">Conversor de Satoshis</a>
+                    <a href="conversor.html">Conversor de Moedas</a>                    
+                    <a href="btc_fees.html">BTC Fees</a>
+                    <a href="btc_checker.html">BTC Checker</a>
+                    <a href="eth_checker.html">ETH Checker</a>
+                    <a href="bnb_checker.html">BNB Checker</a>                    
+                    <a href="qr_code.html">Gerador de QR Code</a>
+                    <a href="bitcoin_retirement_calculator.html" target="_blank">Bitcoin Retirement Calculator</a>
+                    <a href="simulador_cdi.html" target="_blank">Simulador CDI</a>                    
+                </div>
+            <li><a href="carteiras.html">Carteiras</a></li>
+            <li><a href="seguranca.html">Segurança</a></li>                                   
+            <li><a href="exchanges.html">Exchanges</a></li>
+            <li><a href="explorers.html">Explorers</a></li>
+            <li><a href="gas_fees.html">Gas/Fees</a></li>
+            <li><a href="analises.html">Análises</a></li>
+            <li><a href="marketcap.html">Market Cap</a></li>
+            <li><a href="defi.html">DeFi</a></li>                      
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="servicos.html">Serviços</a></li>
+            <li><a href="noticias.html">Notícias</a></li>
+            <li><a href="nashiex.html">NashiEX</a></li>            
+        </ul>
+    </nav>
+    </header>
+
+
+    <main>
+<!--
+  <h2>[ BSC Balance Checker ]</h2>    
+  <div class="main-container">    
+  <div class="container">
+    
+    <textarea id="addresses" placeholder="Enter BSC addresses separated by commas"></textarea>
+    <button onclick="getBalances()">Check Balances</button>
+    <button id="copyButton" onclick="copyTable()" style="display: none;">Copy Table</button>
+    <div id="result"></div>
+  </div>
+  </div>
+
+  <script>
+    async function getBalances() {
+      const input = document.getElementById('addresses').value;
+      const resultDiv = document.getElementById('result');
+      const copyButton = document.getElementById('copyButton');
+      resultDiv.innerHTML = 'Checking balances...';
+      copyButton.style.display = 'none';
+
+      const addresses = input
+        .split(',')
+        .map(addr => addr.trim())
+        .filter(addr => /^0x[a-fA-F0-9]{40}$/.test(addr));
+
+      if (addresses.length === 0) {
+        resultDiv.textContent = 'No valid addresses found.';
+        return;
+      }
+
+      const balances = await Promise.all(
+        addresses.map(async (address) => {
+          const options = {
+            method: 'POST',
+            headers: {
+              accept: 'application/json',
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: 1,
+              jsonrpc: '2.0',
+              params: [address, 'latest'],
+              method: 'eth_getBalance'
+            })
+          };
+
+          try {
+            const res = await fetch('https://bsc-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3', options);
+            const data = await res.json();
+            if (data.result) {
+              const balanceInWei = BigInt(data.result);
+              const balanceInBNB = Number(balanceInWei) / 1e18;
+              return { address, balance: balanceInBNB };
+            }
+          } catch (error) {
+            // ignore error, will be filtered below
+          }
+          return { address, balance: null };
+        })
+      );
+
+      const validBalances = balances.filter(b => b.balance !== null);
+      validBalances.sort((a, b) => b.balance - a.balance); // descending
+
+      if (validBalances.length === 0) {
+        resultDiv.textContent = 'No valid balances could be retrieved.';
+        return;
+      }
+
+      let tableHTML = `
+        <table id="balanceTable">
+          <thead>
+            <tr>
+              <th>Address</th>
+              <th>Balance (BNB)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      for (const { address, balance } of validBalances) {
+        tableHTML += `
+          <tr>
+            <td>${address}</td>
+            <td>${balance.toFixed(6)}</td>
+          </tr>
+        `;
+      }
+
+      tableHTML += `</tbody></table>`;
+      resultDiv.innerHTML = tableHTML;
+      copyButton.style.display = 'inline-block';
+    }
+
+    function copyTable() {
+      const table = document.getElementById('balanceTable');
+      if (!table) return;
+
+      let text = '';
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+        text += rowText + '\n';
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+      }).catch(err => {
+        alert('Failed to copy table: ' + err);
+      });
+    }
+  </script>
+
+-->
+
+
+<h2>[ BNB Balance Checker ]</h2>
+<div class="main-container">    
+<div class="container">
+  <textarea id="addresses" placeholder="Insira um ou mais endereços (separados por vírgula)"></textarea>
+  <button onclick="getBalances()">Check Balances</button>
+  <button id="copyButton" onclick="copyTable()" style="display: none;">Copy Table</button>
+  <div id="result"></div>
+</div>
+</div>
+
+<script>
+  let bnbPriceUSD = 0;
+  let bnbPriceBRL = 0;
+
+  async function fetchBNBPrices() {
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd,brl');
+      const data = await res.json();
+      bnbPriceUSD = data.binancecoin.usd;
+      bnbPriceBRL = data.binancecoin.brl;
+    } catch (err) {
+      console.error('Erro ao buscar cotação do BNB:', err);
+      bnbPriceUSD = 0;
+      bnbPriceBRL = 0;
+    }
+  }
+
+  async function getBalances() {
+    const input = document.getElementById('addresses').value;
+    const resultDiv = document.getElementById('result');
+    const copyButton = document.getElementById('copyButton');
+    resultDiv.innerHTML = 'Checking balances...';
+    copyButton.style.display = 'none';
+
+    const addresses = input
+      .split(',')
+      .map(addr => addr.trim())
+      .filter(addr => /^0x[a-fA-F0-9]{40}$/.test(addr));
+
+    if (addresses.length === 0) {
+      resultDiv.textContent = 'No valid addresses found.';
+      return;
+    }
+
+    await fetchBNBPrices(); // get USD/BRL values
+
+    const balances = await Promise.all(
+      addresses.map(async (address) => {
+        const options = {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: 1,
+            jsonrpc: '2.0',
+            params: [address, 'latest'],
+            method: 'eth_getBalance'
+          })
+        };
+
+        try {
+          const res = await fetch('https://bsc-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3', options);
+          const data = await res.json();
+          if (data.result) {
+            const balanceInWei = BigInt(data.result);
+            const balanceBNB = Number(balanceInWei) / 1e18;
+            return {
+              address,
+              balance: balanceBNB,
+              usd: balanceBNB * bnbPriceUSD,
+              brl: balanceBNB * bnbPriceBRL
+            };
+          }
+        } catch (error) {
+          // erro ignorado
+        }
+        return { address, balance: null };
+      })
+    );
+
+    const validBalances = balances.filter(b => b.balance !== null);
+    validBalances.sort((a, b) => b.balance - a.balance); // ordem decrescente
+
+    if (validBalances.length === 0) {
+      resultDiv.textContent = 'No valid balances could be retrieved.';
+      return;
+    }
+
+    let tableHTML = `
+      <table id="balanceTable">
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th>Balance (BNB)</th>
+            <th>USD</th>
+            <th>BRL</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    for (const { address, balance, usd, brl } of validBalances) {
+      tableHTML += `
+        <tr>
+          <td>${address}</td>
+          <td>${balance.toFixed(6)}</td>
+          <td>$${usd.toFixed(2)}</td>
+          <td>R$ ${brl.toFixed(2)}</td>
+        </tr>
+      `;
+    }
+
+    tableHTML += `</tbody></table>`;
+    resultDiv.innerHTML = tableHTML;
+    copyButton.style.display = 'inline-block';
+  }
+
+  function copyTable() {
+    const table = document.getElementById('balanceTable');
+    if (!table) return;
+
+    let text = '';
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+      text += rowText + '\n';
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Table copied to clipboard!');
+    }).catch(err => {
+      alert('Failed to copy table: ' + err);
+    });
+  }
+</script>
+
+
+
+  
+        
+    </main>
+</body>
+
+
+<footer>
+
+<h4>Nashi Finance 2026</h4>
+
+</footer>
+</html>

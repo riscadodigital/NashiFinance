@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador CDI (IR fixo)</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+    --bg:#f3f4f5;
+    --sidebar:#ffffff;
+    --card:#ffffff;
+    --input:#eeeeee;
+    --text:#111;
+    --muted:#555;
+    --primary:#017b40;
+}
+
+.dark{
+    --bg:#002500;
+    --sidebar:#111822;
+    --card:#111822;
+    --input:#1d242f;
+    --text:#ffffff;
+    --muted:#a0a3b1;
+    --primary:#017b40;    
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Inter', sans-serif;
+    transition:0.3s;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    height:100vh;
+}
+
+.sidebar{
+    width:180px;
+    background:var(--sidebar);
+    padding:25px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.sidebar h1{
+    font-size:18px;
+    color:var(--primary);
+}
+
+.theme-btn{
+    cursor:pointer;
+    padding:10px;
+    background:var(--input);
+    border-radius:12px;
+    text-align:center;
+}
+
+.main{
+    flex:1;
+    padding:40px;
+    overflow:auto;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.card{
+    background:var(--card);
+    padding:20px;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.card h3{
+    margin-bottom:15px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:12px;
+    border-radius:10px;
+    border:none;
+    background:var(--input);
+    color:var(--text);
+}
+
+button{
+    width:100%;
+    padding:11px;
+    border:none;
+    border-radius:10px;
+    background:var(--primary);
+    color:white;
+    font-weight:bold;
+    font-size: medium;
+    cursor:pointer;
+}
+
+button:hover{
+    background-color: #028e4a;
+}
+
+.metric{
+    font-size:22px;
+    font-weight:bold;
+    margin-top:5px;
+}
+
+.small{
+    font-size:13px;
+    color:var(--muted);
+}
+
+canvas{
+    margin-top:20px;
+}
+
+@media(max-width:600px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+    .sidebar{
+        display:none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div>
+        <h1>Simulador 🌱</h1>
+        <p class="small">Investimento CDI</p>
+    </div>
+    <div class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀️🌙</div>
+</div>
+
+<div class="main">
+
+<div class="grid">
+
+<div class="card">
+    <h3>Simulação</h3>
+    <label>% do CDI</label>
+    <input type="number" id="percentualCdi" placeholder="Ex.: 100" value="100">
+
+    <label>Valor Investido</label>
+    <input type="number" id="valor" placeholder="Ex.: 1000">
+
+    <label>Período (meses)</label>
+    <input type="number" id="meses" placeholder="Ex.: 12" value="12">
+
+    <label>CDI anual (%)</label>
+    <input type="number" id="cdi" placeholder="Ex.: 14,6" step="0.01">
+
+    <label>IR fixo (%)</label>
+    <input type="number" id="ir" placeholder="IR fixo (%)" value="22.5">
+    <button onclick="calcular()">Simular</button>
+</div>
+
+<div class="card">
+    <h3>Resumo</h3>
+    <div class="small">Valor Final</div>
+    <div class="metric" id="valorFinal">R$ 0,00</div>
+
+    <div class="small">Rendimento Líquido</div>
+    <div class="metric" id="rendLiquido">R$ 0,00</div>
+
+    <div class="small">Imposto Pago</div>
+    <div class="metric" id="imposto">R$ 0,00</div>
+</div>
+
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <h3>Evolução do Investimento</h3>
+    <canvas id="grafico"></canvas>
+</div>
+
+</div>
+
+<script>
+
+let chart;
+
+function toggleTheme(){
+    document.body.classList.toggle("dark");
+}
+
+function formatar(valor){
+    return valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+
+function calcular(){
+    let percentualCdi = parseFloat(document.getElementById("percentualCdi").value);
+    let valorInicial = parseFloat(document.getElementById("valor").value);
+    let meses = parseInt(document.getElementById("meses").value);
+    let cdiAnual = parseFloat(document.getElementById("cdi").value);
+    let ir = parseFloat(document.getElementById("ir").value);
+
+    if(!valorInicial || !meses || !cdiAnual || !percentualCdi || !ir){
+        alert("Preencha todos os campos");
+        return;
+    }
+
+    let taxaAnualEfetiva = (cdiAnual * (percentualCdi/100)) / 100;
+    let taxaMensal = Math.pow((1 + taxaAnualEfetiva), 1/12) - 1;
+
+    let valorBruto = valorInicial;
+    let brutoArray = [valorInicial];
+    let liquidoArray = [valorInicial];
+    let labels = ["0"];
+
+    let rendimentoBrutoTotal = 0;
+
+    for(let i=1;i<=meses;i++){
+        let rendimento = valorBruto * taxaMensal;
+        valorBruto += rendimento;
+        rendimentoBrutoTotal += rendimento;
+
+        let impostoParcial = rendimentoBrutoTotal * (ir/100);
+        let valorLiquidoAtual = valorInicial + (rendimentoBrutoTotal - impostoParcial);
+
+        brutoArray.push(valorBruto);
+        liquidoArray.push(valorLiquidoAtual);
+        labels.push(i.toString());
+    }
+
+    let impostoTotal = rendimentoBrutoTotal * (ir/100);
+    let rendimentoLiquido = rendimentoBrutoTotal - impostoTotal;
+    let valorFinal = valorInicial + rendimentoLiquido;
+
+    document.getElementById("valorFinal").textContent = formatar(valorFinal);
+    document.getElementById("rendLiquido").textContent = formatar(rendimentoLiquido);
+    document.getElementById("imposto").textContent = formatar(impostoTotal);
+
+    if(chart){
+        chart.destroy();
+    }
+
+    chart = new Chart(document.getElementById("grafico"),{
+        type:"line",
+        data:{
+            labels:labels,
+            datasets:[
+                {
+                    label:"Bruto",
+                    data:brutoArray,
+                    borderColor:"#017b40",
+                    tension:0.3
+                },
+                {
+                    label:"Líquido",
+                    data:liquidoArray,
+                    borderColor:"#8cff80",
+                    tension:0.3
+                }
+            ]
+        },
+        options:{
+            responsive:true,
+            animation:{duration:1500},
+            plugins:{
+                legend:{labels:{color:getComputedStyle(document.body).color}}
+            },
+            scales:{
+                x:{ticks:{color:getComputedStyle(document.body).color}},
+                y:{ticks:{color:getComputedStyle(document.body).color}}
+            }
+        }
+    });
+
+}
+
+</script>
+
+</body>
+</html>

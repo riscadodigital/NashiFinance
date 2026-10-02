@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nashi Finance | Conversor Cripto & Fiat </title>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="styles/style_conversor_cripto.css">
+</head>
+
+<body>
+    <header class="cabecalho">
+    <h1> <a href="index.html"><img class="logotipo" src="images/nashifinance.png"></a></h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Início</a></li>
+            <li class="dropdown">
+            <a href="javascript:void(0)" class="dropbtn">Ferramentas</a>    
+                <div class="dropdown-content">
+                    <a href="conversor_cripto.html">Conversor de Criptomoedas</a>
+                    <a href="satoshis.html">Conversor de Satoshis</a>
+                    <a href="conversor.html">Conversor de Moedas</a>                    
+                    <a href="btc_fees.html">BTC Fees</a>
+                    <a href="btc_checker.html">BTC Checker</a>
+                    <a href="eth_checker.html">ETH Checker</a>
+                    <a href="bnb_checker.html">BNB Checker</a>                    
+                    <a href="qr_code.html">Gerador de QR Code</a>
+                    <a href="bitcoin_retirement_calculator.html" target="_blank">Bitcoin Retirement Calculator</a>
+                    <a href="simulador_cdi.html" target="_blank">Simulador CDI</a>                    
+                </div>
+            <li><a href="carteiras.html">Carteiras</a></li>
+            <li><a href="seguranca.html">Segurança</a></li>                                   
+            <li><a href="exchanges.html">Exchanges</a></li>
+            <li><a href="explorers.html">Explorers</a></li>
+            <li><a href="gas_fees.html">Gas/Fees</a></li>
+            <li><a href="analises.html">Análises</a></li>
+            <li><a href="marketcap.html">Market Cap</a></li>
+            <li><a href="defi.html">DeFi</a></li>                      
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="servicos.html">Serviços</a></li>
+            <li><a href="noticias.html">Notícias</a></li>
+            <li><a href="nashiex.html">NashiEX</a></li>            
+        </ul>
+    </nav>
+    </header>
+
+<main>
+
+
+<h2>[ Conversor Cripto & Fiat ]</h2>
+    
+<div class="main-container">    
+<div class="container">
+
+
+<!-- <div class="subtitle">Conversão em tempo real</div> --> 
+
+<div class="row">
+    <input id="amount" type="number" value="1">
+</div>
+
+<div class="row">
+    <select id="from">
+        <optgroup label="Criptomoedas">
+            <option value="bitcoin">BTC</option>
+            <option value="ethereum">ETH</option>
+            <option value="binancecoin">BNB</option>
+            <option value="solana">SOL</option>
+        </optgroup>
+        <optgroup label="Moedas Fiat">
+            <option value="usd">USD</option>
+            <option value="brl">BRL</option>
+            <option value="eur">EUR</option>
+        </optgroup>
+    </select>
+
+    <div class="swap" onclick="swap()">⇄</div>
+
+    <select id="to">
+        <optgroup label="Criptomoedas">
+            <option value="bitcoin">BTC</option>
+            <option value="ethereum">ETH</option>
+            <option value="binancecoin">BNB</option>
+            <option value="solana">SOL</option>
+        </optgroup>
+        <optgroup label="Moedas Fiat">
+            <option value="usd" selected>USD</option>
+            <option value="brl">BRL</option>
+            <option value="eur">EUR</option>
+        </optgroup>
+    </select>
+</div>
+
+<div class="result">
+    <div id="label">Carregando...</div>
+    <div class="price" id="price">--</div>
+    <div class="info">Dados via CoinGecko</div>
+</div>
+
+<button onclick="convert()">Converter</button>
+
+</div>
+</div><!--main-countainer-->
+
+<script>
+
+function isCrypto(asset){
+    return ["bitcoin","ethereum","binancecoin","solana"].includes(asset);
+}
+
+function swap(){
+    const from = document.getElementById("from");
+    const to = document.getElementById("to");
+
+    let temp = from.value;
+    from.value = to.value;
+    to.value = temp;
+
+    convert();
+}
+
+async function convert(){
+
+    let amount = parseFloat(document.getElementById("amount").value);
+    let from = document.getElementById("from").value;
+    let to = document.getElementById("to").value;
+
+    try{
+
+        let price;
+
+        // 🔥 CASO 1: CRYPTO → FIAT
+        if(isCrypto(from) && !isCrypto(to)){
+            let res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${from}&vs_currencies=${to}`);
+            let data = await res.json();
+            price = data[from][to];
+        }
+
+        // 🔥 CASO 2: FIAT → CRYPTO
+        else if(!isCrypto(from) && isCrypto(to)){
+            let res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${to}&vs_currencies=${from}`);
+            let data = await res.json();
+            price = 1 / data[to][from];
+        }
+
+        // 🔥 CASO 3: CRYPTO → CRYPTO
+        else if(isCrypto(from) && isCrypto(to)){
+            let res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${from},${to}&vs_currencies=usd`);
+            let data = await res.json();
+            price = data[from].usd / data[to].usd;
+        }
+
+        // 🔥 CASO 4: FIAT → FIAT
+        else{
+            let res = await fetch(`https://api.exchangerate.host/convert?from=${from.toUpperCase()}&to=${to.toUpperCase()}`);
+            let data = await res.json();
+            price = data.result;
+        }
+
+        let total = price * amount;
+
+        document.getElementById("price").innerHTML =
+            total.toLocaleString(undefined,{maximumFractionDigits:6}) + " " + to.toUpperCase();
+
+        document.getElementById("label").innerHTML =
+            `1 ${from.toUpperCase()} = ${price.toFixed(6)} ${to.toUpperCase()}`;
+
+    }catch(e){
+        document.getElementById("price").innerHTML = "Erro ao carregar";
+    }
+}
+
+convert();
+
+</script>
+    
+      
+</main>
+  
+</body>
+<footer>
+
+<h4>─ Nashi Finance 2026 ─</h4>
+
+</footer>
+</html>
